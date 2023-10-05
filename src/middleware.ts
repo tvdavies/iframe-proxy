@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export async function middleware(request: NextRequest) {
+  if (request.nextUrl.pathname.startsWith("/js/")) {
+    return;
+  }
+
   // Get URL from path
   const path = request.nextUrl.pathname;
   const urlString = path.slice(1);
@@ -31,22 +35,25 @@ export async function middleware(request: NextRequest) {
 
   // If content type is HTML replace all relative URLs with absolute URLs
   if (headers.get("content-type")?.includes("text/html")) {
-    const html = await response.text();
+    let html = await response.text();
 
-    const absoluteHtml = html.replace(
-      /(href|src)="([^"]*)"/g,
-      (match, p1, p2) => {
-        // Check if URL is relative and not an absolute URL
-        if (!p2.startsWith("http") && p2.startsWith("/")) {
-          const encodedUrl = encodeURIComponent(url.origin + p2);
-          return `${p1}="https://corsproxy.io/?${encodedUrl}"`;
-        }
-        // Keep the original if it's an absolute URL
-        return match;
+    html = html.replace(/(href|src)="([^"]*)"/g, (match, p1, p2) => {
+      // Check if URL is relative and not an absolute URL
+      if (!p2.startsWith("http") && p2.startsWith("/")) {
+        const encodedUrl = encodeURIComponent(url.origin + p2);
+        return `${p1}="https://corsproxy.io/?${encodedUrl}"`;
       }
-    );
+      // Keep the original if it's an absolute URL
+      return match;
+    });
 
-    return new NextResponse(absoluteHtml, {
+    // Add script tags to the end of the body
+    const scriptTag =
+      '<script src="https://cdn.tailwindcss.com/"></script><script src="/js/inject.js"></script>';
+
+    html = html.replace("</body>", `${scriptTag}</body>`);
+
+    return new NextResponse(html, {
       status: response.status,
       headers,
     });
