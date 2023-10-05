@@ -17,19 +17,20 @@ export async function middleware(request: NextRequest) {
     return new NextResponse("Invalid URL", { status: 400 });
   }
 
-  console.log("url", url);
+  console.log("Fetching URL:", url.toString());
 
   const response = await fetch(url.toString());
 
   // If not found, return 404
   if (!response.ok) return new NextResponse(null, { status: 404 });
 
+  const headers = new Headers(response.headers);
   // Remove x-frame-options header and add CORS header
-  response.headers.delete("x-frame-options");
-  response.headers.set("access-control-allow-origin", "*");
+  headers.delete("x-frame-options");
+  headers.set("access-control-allow-origin", "*");
 
   // If content type is HTML replace all relative URLs with absolute URLs
-  if (response.headers.get("content-type")?.includes("text/html")) {
+  if (headers.get("content-type")?.includes("text/html")) {
     const html = await response.text();
 
     const absoluteHtml = html.replace(
@@ -47,12 +48,12 @@ export async function middleware(request: NextRequest) {
 
     return new NextResponse(absoluteHtml, {
       status: response.status,
-      headers: response.headers,
+      headers,
     });
   }
 
   return new NextResponse(response.body, {
     status: response.status,
-    headers: response.headers,
+    headers,
   });
 }
