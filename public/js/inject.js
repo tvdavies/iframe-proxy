@@ -25,13 +25,13 @@
     });
   });
 
-  window.parent.postMessage(
-    {
-      type: "TEXTS",
-      data: window.textById,
-    },
-    "*"
-  );
+  const message = {
+    type: "TEXTS",
+    data: window.textById,
+  };
+
+  console.log("Sending message to parent:", message);
+  window.parent.postMessage(message, "*");
 
   window.addEventListener("message", (event) => {
     if (event.data.type === "HIGHLIGHT_TEXTS") {
@@ -39,6 +39,7 @@
 
       Object.keys(event.data.data).forEach((id) => {
         const el = document.querySelector(`[data-text-id="${id}"]`);
+        console.log("Highlighting text with id:", id, el);
         el.classList.add("bg-yellow-200", "bg-opacity-20", "p-2");
       });
     }
