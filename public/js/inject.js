@@ -25,10 +25,13 @@
     });
   });
 
-  window.parent.postMessage({
-    type: "TEXTS",
-    data: window.textById,
-  });
+  window.parent.postMessage(
+    {
+      type: "TEXTS",
+      data: window.textById,
+    },
+    "*"
+  );
 
   window.addEventListener("message", (event) => {
     if (event.data.type === "HIGHLIGHT_TEXTS") {
