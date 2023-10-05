@@ -30,18 +30,23 @@
     data: window.textById,
   };
 
-  console.log("Sending message to parent:", message);
   window.parent.postMessage(message, "*");
 
   window.addEventListener("message", (event) => {
     if (event.data.type === "HIGHLIGHT_TEXTS") {
-      console.log("HIGHLIGHT_TEXTS", event.data.data);
-
-      Object.keys(event.data.data).forEach((id) => {
+      for (const id of event.data.data) {
         const el = document.querySelector(`[data-text-id="${id}"]`);
-        console.log("Highlighting text with id:", id, el);
-        el.classList.add("bg-yellow-200", "bg-opacity-20", "p-2");
-      });
+        el.classList.add(
+          "bg-red-500",
+          "bg-opacity-20",
+          "p-2",
+          "rounded-md",
+          "border-2",
+          "border-solid",
+          "border-red-500",
+          "inline-block"
+        );
+      }
     }
   });
 })();
