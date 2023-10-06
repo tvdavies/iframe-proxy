@@ -49,20 +49,20 @@
   window.parent.postMessage(message, "*");
 
   window.addEventListener("message", (event) => {
-    if (event.data.type === "HIGHLIGHT_TEXTS") {
-      for (const id of event.data.data) {
+    if (event.data.type === "ADD_CLASSES") {
+      for (const id of event.data.data.ids) {
         const el = document.querySelector(`[data-text-id="${id}"]`);
-        el.classList.add(
-          "bg-red-500",
-          "bg-opacity-20",
-          "p-2",
-          "rounded-md",
-          "border-2",
-          "border-solid",
-          "border-red-500",
-          "inline-block"
-        );
+        el.classList.add(event.data.data.classes);
       }
+      return;
+    }
+
+    if (event.data.type === "REMOVE_CLASSES") {
+      for (const id of event.data.data.ids) {
+        const el = document.querySelector(`[data-text-id="${id}"]`);
+        el.classList.remove(event.data.data.classes);
+      }
+      return;
     }
   });
 })();
