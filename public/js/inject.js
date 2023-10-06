@@ -19,6 +19,12 @@
 
   elementsToTarget.forEach((tag) => {
     document.querySelectorAll(tag).forEach((el) => {
+      const text = el.innerText;
+
+      if (text.trim().length === 0) {
+        return;
+      }
+
       const id = generateId();
       el.setAttribute("data-text-id", id);
       window.textById[id] = el.innerText;
