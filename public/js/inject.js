@@ -19,6 +19,16 @@
 
   elementsToTarget.forEach((tag) => {
     document.querySelectorAll(tag).forEach((el) => {
+      // If the parent already has a data-text-id, skip this element
+      if (el.closest("[data-text-id]")) {
+        return;
+      }
+
+      // If the element is not visible, skip it
+      if (el.offsetParent === null) {
+        return;
+      }
+
       const text = el.innerText;
 
       if (text.trim().length === 0) {
