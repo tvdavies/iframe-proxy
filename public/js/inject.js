@@ -52,7 +52,10 @@
     if (event.data.type === "ADD_CLASSES") {
       for (const id of event.data.data.ids) {
         const el = document.querySelector(`[data-text-id="${id}"]`);
-        el.classList.add(event.data.data.classes);
+
+        for (const className of event.data.data.classes) {
+          el.classList.add(className);
+        }
       }
       return;
     }
@@ -60,7 +63,10 @@
     if (event.data.type === "REMOVE_CLASSES") {
       for (const id of event.data.data.ids) {
         const el = document.querySelector(`[data-text-id="${id}"]`);
-        el.classList.remove(event.data.data.classes);
+
+        for (const className of event.data.data.classes) {
+          el.classList.remove(className);
+        }
       }
       return;
     }
