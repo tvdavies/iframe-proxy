@@ -41,16 +41,19 @@ export async function middleware(request: NextRequest) {
       // Check if URL is relative and not an absolute URL
       if (!p2.startsWith("http") && p2.startsWith("/")) {
         const encodedUrl = encodeURIComponent(url.origin + p2);
-        return `${p1}="https://corsproxy.io/?${encodedUrl}"`;
+        // return `${p1}="https://corsproxy.io/?${encodedUrl}"`;
+        return `${p1}="https://frameme.tvd.app/${url.origin + p2}"`;
       }
       // Keep the original if it's an absolute URL
       return match;
     });
 
-    // Add script tags to the end of the body
-    const scriptTag =
-      '<script src="https://cdn.tailwindcss.com/"></script><script src="/js/inject.js"></script>';
+    // Add meta tag containing the original request URL
+    const metaTag = `<meta name="original-url" content="${url.toString()}">`;
+    html = html.replace(/<head[^>]*>/, (match) => `${match}${metaTag}`);
 
+    // Add script tags to the end of the body
+    const scriptTag = '<script src="/js/inject.js"></script>';
     html = html.replace("</body>", `${scriptTag}</body>`);
 
     return new NextResponse(html, {

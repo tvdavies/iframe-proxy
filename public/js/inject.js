@@ -1,73 +1,121 @@
 (() => {
-  function generateId() {
-    return Math.random().toString(36).substring(2, 9);
-  }
+  const style = document.createElement("style");
+  style.innerHTML = `
+    .highlight [data-text-highlighted]:not([data-text-focused]) {
+      background: rgb(255, 0, 0, 0.1);
+    }
 
-  const elementsToTarget = [
-    "p",
-    "h1",
-    "h2",
-    "h3",
-    "h4",
-    "h5",
-    "h6",
-    "a",
-    "span",
-  ];
+    [data-text-focused] {
+      background: rgb(255, 0, 0, 0.4);
+    }
+  `;
+  document.head.appendChild(style);
+
+  document.body.classList.add("highlight");
+
+  let nextId = 1;
 
   window.textById = {};
 
-  elementsToTarget.forEach((tag) => {
-    document.querySelectorAll(tag).forEach((el) => {
-      // If the parent already has a data-text-id, skip this element
-      if (el.closest("[data-text-id]")) {
+  function wrapTextNodes(node) {
+    if (node.nodeType === Node.TEXT_NODE) {
+      if (node.textContent.trim().length === 0) {
         return;
       }
 
-      // If the element is not visible, skip it
-      if (el.offsetParent === null) {
-        return;
+      const span = document.createElement("span");
+      const id = nextId++;
+      span.setAttribute("data-text-id", "" + id);
+      window.textById[id] = node.textContent;
+
+      node.parentNode.replaceChild(span, node);
+      span.appendChild(node);
+    } else {
+      for (let i = 0; i < node.childNodes.length; i++) {
+        wrapTextNodes(node.childNodes[i]);
       }
+    }
+  }
 
-      const text = el.innerText;
+  wrapTextNodes(document.body);
 
-      if (text.trim().length === 0) {
-        return;
-      }
+  // Get original URL from meta original-url tag
+  const originalUrl = document.querySelector(
+    'meta[name="original-url"]'
+  ).content;
 
-      const id = generateId();
-      el.setAttribute("data-text-id", id);
-      window.textById[id] = el.innerText;
-    });
-  });
-
-  const message = {
-    type: "TEXTS",
-    data: window.textById,
-  };
-
-  window.parent.postMessage(message, "*");
+  window.parent.postMessage(
+    {
+      type: "PAGE_LOADED",
+      data: {
+        plainText: document.documentElement.innerText,
+        texts: window.textById,
+        url: originalUrl,
+      },
+    },
+    "*"
+  );
 
   window.addEventListener("message", (event) => {
-    if (event.data.type === "ADD_CLASSES") {
-      for (const id of event.data.data.ids) {
-        const el = document.querySelector(`[data-text-id="${id}"]`);
+    if (event.data.type === "HIGHLIGHT") {
+      const enabled = event.data.data;
 
-        for (const className of event.data.data.classes) {
-          el.classList.add(className);
-        }
+      if (enabled) {
+        document.body.classList.add("highlight");
+      } else {
+        document.body.classList.remove("highlight");
+      }
+
+      return;
+    }
+
+    if (event.data.type === "HIGHLIGHT_TEXTS") {
+      for (const id of event.data.data) {
+        const el = document.querySelector(`[data-text-id="${id}"]`);
+        el.setAttribute("data-text-highlighted", true);
       }
       return;
     }
 
-    if (event.data.type === "REMOVE_CLASSES") {
-      for (const id of event.data.data.ids) {
-        const el = document.querySelector(`[data-text-id="${id}"]`);
+    if (event.data.type === "UNHIGHLIGHT_ALL_TEXTS") {
+      document.querySelectorAll("[data-text-highlighted]").forEach((el) => {
+        el.removeAttribute("data-text-highlighted");
+      });
+      return;
+    }
 
-        for (const className of event.data.data.classes) {
-          el.classList.remove(className);
-        }
+    if (event.data.type === "UNHIGHLIGHT_TEXTS") {
+      for (const id of event.data.data) {
+        const el = document.querySelector(`[data-text-id="${id}"]`);
+        el.removeAttribute("data-text-highlighted");
       }
+      return;
+    }
+
+    if (event.data.type === "FOCUS_TEXT") {
+      // Check if this element is already focussed - if it is we will toggle it off
+      const el = document.querySelector(`[data-text-id="${event.data.data}"]`);
+      const focus = !el.hasAttribute("data-text-focused");
+
+      // Remove data-text-focused from all elements
+      document.querySelectorAll("[data-text-focused]").forEach((el) => {
+        el.removeAttribute("data-text-focused");
+      });
+
+      // Set the document zoom to 2x if focussing
+      document.body.style.zoom = focus ? 2 : 1;
+
+      if (focus) {
+        el.setAttribute("data-text-focused", true);
+
+        // Scroll the element into view
+        el.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+          inline: "center",
+        });
+      }
+
       return;
     }
   });
