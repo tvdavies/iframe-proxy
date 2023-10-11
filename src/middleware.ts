@@ -1,5 +1,8 @@
+import { match } from "assert";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+
+const PROXY_URL = process.env.PROXY_URL || "http://localhost:3000";
 
 export async function middleware(request: NextRequest) {
   if (request.nextUrl.pathname.startsWith("/js/")) {
@@ -42,14 +45,19 @@ export async function middleware(request: NextRequest) {
   if (headers.get("content-type")?.includes("text/html")) {
     let html = await response.text();
 
+    // Add base tag to the head
+    const baseTag = `<base href="${PROXY_URL}/${url.origin}/">`;
+    html = html.replace(/<head[^>]*>/, (match) => `${match}${baseTag}`);
+
     html = html.replace(/(href|src)="([^"]*)"/g, (match, p1, p2) => {
-      // Check if URL is relative and not an absolute URL
-      if (!p2.startsWith("http") && p2.startsWith("/")) {
-        const encodedUrl = encodeURIComponent(url.origin + p2);
-        // return `${p1}="https://corsproxy.io/?${encodedUrl}"`;
-        return `${p1}="https://frameme.tvd.app/${url.origin + p2}"`;
+      if (p2.startsWith("http")) {
+        return `${PROXY_URL}/${match}`;
       }
-      // Keep the original if it's an absolute URL
+
+      if (p2.startsWith("/")) {
+        return `${p1}="${PROXY_URL}/${url.origin + p2}"`;
+      }
+
       return match;
     });
 
