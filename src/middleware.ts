@@ -26,7 +26,18 @@ export async function middleware(request: NextRequest) {
 
   console.log("Fetching URL:", url.toString());
 
-  const response = await fetch(url.toString());
+  const headers = {
+    "user-agent": request.headers.get("user-agent") || "",
+    "accept-language": request.headers.get("accept-language") || "",
+    "accept-encoding": request.headers.get("accept-encoding") || "",
+    accept: request.headers.get("accept") || "",
+    "cache-control": request.headers.get("cache-control") || "",
+    referer: url.origin + "/",
+  };
+
+  console.log(headers);
+
+  const response = await fetch(url.toString(), { headers });
 
   // If not OK, return response with status code and text
   if (!response.ok) {
@@ -36,13 +47,13 @@ export async function middleware(request: NextRequest) {
     });
   }
 
-  const headers = new Headers(response.headers);
+  const responseHeaders = new Headers(response.headers);
   // Remove x-frame-options header and add CORS header
-  headers.delete("x-frame-options");
-  headers.set("access-control-allow-origin", "*");
+  responseHeaders.delete("x-frame-options");
+  responseHeaders.set("access-control-allow-origin", "*");
 
   // If content type is HTML replace all relative URLs with absolute URLs
-  if (headers.get("content-type")?.includes("text/html")) {
+  if (responseHeaders.get("content-type")?.includes("text/html")) {
     let html = await response.text();
 
     // Add base tag to the head
@@ -71,12 +82,12 @@ export async function middleware(request: NextRequest) {
 
     return new NextResponse(html, {
       status: response.status,
-      headers,
+      headers: responseHeaders,
     });
   }
 
   return new NextResponse(response.body, {
     status: response.status,
-    headers,
+    headers: responseHeaders,
   });
 }
