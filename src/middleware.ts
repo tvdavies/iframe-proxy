@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { cookies } from "next/headers";
 
 const PROXY_URL = process.env.PROXY_URL || "http://localhost:3000";
 
@@ -8,11 +7,6 @@ export async function middleware(request: NextRequest) {
   if (request.nextUrl.pathname.startsWith("/js/")) {
     return;
   }
-
-  const cookieStore = cookies();
-  const origin = cookieStore.get("iframe-proxy-origin")?.value;
-
-  console.log("iframe-proxy-origin:", origin);
 
   // Get URL from path
   const path = request.nextUrl.pathname;
@@ -26,12 +20,15 @@ export async function middleware(request: NextRequest) {
   try {
     url = new URL(urlString);
   } catch (error) {
-    if (!origin) {
-      return new NextResponse("Invalid URL", { status: 400 });
-    }
-
     try {
-      url = new URL(urlString, origin);
+      // This is a relative URL, get the referer URL to find the base
+      const referer = request.headers.get("referer");
+      // Remove the proxy URL prefix from the referer
+      const refererPath = referer?.replace(PROXY_URL + "/", "") || "";
+      // Get the URL from the referer path
+      const refererUrl = new URL(refererPath);
+      console.log("Using referer URL:", refererUrl.toString());
+      url = new URL(urlString, refererUrl);
     } catch (error) {
       return new NextResponse("Invalid URL", { status: 400 });
     }
@@ -76,12 +73,6 @@ export async function middleware(request: NextRequest) {
     // Add script tags to the end of the body
     const scriptTag = '<script src="/js/inject.js"></script>';
     html = html.replace("</body>", `${scriptTag}</body>`);
-
-    // Set the cookie to the origin
-    responseHeaders.set(
-      "set-cookie",
-      `iframe-proxy-origin=${url.origin}; Path=/; SameSite=None; Secure`
-    );
 
     return new NextResponse(html, {
       status: response.status,
