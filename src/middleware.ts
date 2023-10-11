@@ -62,7 +62,10 @@ export async function middleware(request: NextRequest) {
   // Remove x-frame-options header and add CORS header
   responseHeaders.delete("x-frame-options");
   responseHeaders.set("access-control-allow-origin", "*");
-  responseHeaders.set("Set-Cookie", `origin=${url.origin}; Path=/;`);
+  responseHeaders.set(
+    "Set-Cookie",
+    `origin=${url.origin}; Path=/; SameSite=None; Secure`
+  );
 
   // If content type is HTML replace all relative URLs with absolute URLs
   if (responseHeaders.get("content-type")?.includes("text/html")) {
