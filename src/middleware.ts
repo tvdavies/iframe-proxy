@@ -10,7 +10,9 @@ export async function middleware(request: NextRequest) {
   }
 
   const cookieStore = cookies();
-  const origin = cookieStore.get("origin")?.value;
+  const origin = cookieStore.get("iframe-proxy-origin")?.value;
+
+  console.log("iframe-proxy-origin:", origin);
 
   // Get URL from path
   const path = request.nextUrl.pathname;
@@ -62,7 +64,6 @@ export async function middleware(request: NextRequest) {
   // Remove x-frame-options header and add CORS header
   responseHeaders.delete("x-frame-options");
   responseHeaders.set("access-control-allow-origin", "*");
-  responseHeaders.set("Set-Cookie", `origin=${url.origin}; Path=/;`);
 
   // If content type is HTML replace all relative URLs with absolute URLs
   if (responseHeaders.get("content-type")?.includes("text/html")) {
@@ -75,6 +76,12 @@ export async function middleware(request: NextRequest) {
     // Add script tags to the end of the body
     const scriptTag = '<script src="/js/inject.js"></script>';
     html = html.replace("</body>", `${scriptTag}</body>`);
+
+    // Set the cookie to the origin
+    responseHeaders.set(
+      "set-cookie",
+      `iframe-proxy-origin=${url.origin}; Path=/; SameSite=None; Secure`
+    );
 
     return new NextResponse(html, {
       status: response.status,
