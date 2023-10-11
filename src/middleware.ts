@@ -60,7 +60,7 @@ export async function middleware(request: NextRequest) {
     const baseTag = `<base href="${PROXY_URL}/${url.origin}/">`;
     html = html.replace(/<head[^>]*>/, (match) => `${match}${baseTag}`);
 
-    html = html.replace(/(href|src)="([^"]*)"/g, (match, p1, p2) => {
+    html = html.replace(/(href|src|srcset)="([^"]*)"/g, (match, p1, p2) => {
       if (p2.startsWith("http")) {
         return `${PROXY_URL}/${match}`;
       }
