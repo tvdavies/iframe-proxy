@@ -23,6 +23,11 @@
         return;
       }
 
+      // If this text is hidden, don't wrap it
+      if (window.getComputedStyle(node.parentNode).display === "none") {
+        return;
+      }
+
       const span = document.createElement("span");
       const id = nextId++;
       span.setAttribute("data-text-id", "" + id);

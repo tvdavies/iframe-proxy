@@ -25,8 +25,13 @@ export async function middleware(request: NextRequest) {
 
   const response = await fetch(url.toString());
 
-  // If not found, return 404
-  if (!response.ok) return new NextResponse(null, { status: 404 });
+  // If not OK, return response with status code and text
+  if (!response.ok) {
+    return new NextResponse(null, {
+      status: response.status,
+      statusText: response.statusText,
+    });
+  }
 
   const headers = new Headers(response.headers);
   // Remove x-frame-options header and add CORS header
