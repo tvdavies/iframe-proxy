@@ -4,7 +4,10 @@ import type { NextRequest } from "next/server";
 const PROXY_URL = process.env.PROXY_URL || "http://localhost:3000";
 
 export async function middleware(request: NextRequest) {
-  if (request.nextUrl.pathname.startsWith("/js/")) {
+  if (
+    request.nextUrl.pathname.startsWith("/js/") ||
+    request.nextUrl.pathname.startsWith("/api/")
+  ) {
     return;
   }
 
