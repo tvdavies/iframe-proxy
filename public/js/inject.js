@@ -60,9 +60,7 @@
       }
     }
 
-    // return text.replaceAll("\n", "").trim();
-
-    return text;
+    return text.replaceAll("\n", "").trim();
   }
 
   for (const tag of elementsToTarget) {
@@ -78,8 +76,8 @@
       //   text: text,
       //   html: el.innerHTML,
       // };
-      window.textById[id] = el.innerText;
-      window.text += el.innerText + "\n\n";
+      window.textById[id] = text;
+      window.text += text + "\n\n";
     });
   }
 
@@ -114,58 +112,12 @@
     }
 
     if (event.data.type === "HIGHLIGHT_TEXTS") {
-      const complianceResponses = event.data.data;
-
-      for (const {
-        input_text,
-        id: complianceResponseId,
-      } of complianceResponses) {
-        console.log("HIGHLIGHT_TEXT", { text, complianceResponseId });
-
-        for (const id in window.textById) {
-          if (window.textById[id].includes(input_text)) {
-            console.log("FOUND TEXT", { id, input_text });
-
-            const el = document.querySelector(`[data-text-id="${id}"]`);
-            el.setAttribute("data-text-highlighted", true);
-
-            // Append compliance id to data-compliance-id attribute
-            // if it doesn't already exist
-            const complianceIds = el.getAttribute("data-compliance-id");
-            if (!complianceIds) {
-              el.setAttribute("data-compliance-id", complianceResponseId);
-            } else if (!complianceIds.includes(complianceResponseId)) {
-              el.setAttribute(
-                "data-compliance-id",
-                complianceIds + " " + complianceResponseId
-              );
-            }
-
-            break;
-          }
-        }
+      for (const id of event.data.data) {
+        const el = document.querySelector(`[data-text-id="${id}"]`);
+        el.setAttribute("data-text-highlighted", true);
       }
-
       return;
     }
-
-    if (event.data.type === "CLEAR_COMPLIANCE") {
-      // Remove all spans with data-compliance-id attributes
-      // leaving the child text nodes intact
-      document.querySelectorAll("[data-compliance-id]").forEach((el) => {
-        el.removeAttribute("data-compliance-id");
-      });
-
-      return;
-    }
-
-    // if (event.data.type === "HIGHLIGHT_TEXTS") {
-    //   for (const id of event.data.data) {
-    //     const el = document.querySelector(`[data-text-id="${id}"]`);
-    //     el.setAttribute("data-text-highlighted", true);
-    //   }
-    //   return;
-    // }
 
     if (event.data.type === "UNHIGHLIGHT_ALL_TEXTS") {
       document.querySelectorAll("[data-text-highlighted]").forEach((el) => {
@@ -184,9 +136,10 @@
 
     if (event.data.type === "FOCUS_TEXT") {
       // Check if this element is already focussed - if it is we will toggle it off
-      const el = document.querySelector(
-        `[data-compliance-id~="${event.data.data}"]`
-      );
+      const el = document.querySelector(`[data-text-id="${event.data.data}"]`);
+
+      if (!el) return;
+
       const focus = !el.hasAttribute("data-text-focused");
 
       // Remove data-text-focused from all elements
@@ -195,7 +148,7 @@
       });
 
       // Set the document zoom to 2x if focussing
-      // document.body.style.zoom = focus ? 2 : 1;
+      document.body.style.zoom = focus ? 2 : 1;
 
       if (focus) {
         el.setAttribute("data-text-focused", true);
