@@ -135,31 +135,38 @@
     }
 
     if (event.data.type === "FOCUS_TEXT") {
-      // Check if this element is already focussed - if it is we will toggle it off
       const el = document.querySelector(`[data-text-id="${event.data.data}"]`);
 
       if (!el) return;
 
-      const focus = !el.hasAttribute("data-text-focused");
+      const focused = el.hasAttribute("data-text-focused");
 
-      // Remove data-text-focused from all elements
-      document.querySelectorAll("[data-text-focused]").forEach((el) => {
-        el.removeAttribute("data-text-focused");
-      });
+      if (focused) {
+        return;
+      }
 
       // Set the document zoom to 2x if focussing
-      document.body.style.zoom = focus ? 2 : 1;
+      // document.body.style.zoom = focus ? 2 : 1;
 
-      if (focus) {
-        el.setAttribute("data-text-focused", true);
+      el.setAttribute("data-text-focused", true);
 
-        // Scroll the element into view
-        el.scrollIntoView({
-          behavior: "smooth",
-          block: "center",
-          inline: "center",
-        });
-      }
+      // Scroll the element into view
+      el.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+        inline: "center",
+      });
+
+      return;
+    }
+
+    if (event.data.type === "UNFOCUS_TEXT") {
+      const el = document.querySelector(`[data-text-id="${event.data.data}"]`);
+
+      if (!el) return;
+
+      // Remove data-text-focused this element
+      el.removeAttribute("data-text-focused");
 
       return;
     }
